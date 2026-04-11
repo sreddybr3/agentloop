@@ -1,0 +1,15 @@
+[project]
+name = "doc_search_with_reranking_validation"
+version = "0.1.0"
+description = "ADK multi-agent system with Matching and Validation agents using Weaviate vector store"
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk>=1.0.0",
+    "google-genai>=1.0.0",
+    "weaviate-client>=4.9.0",
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
