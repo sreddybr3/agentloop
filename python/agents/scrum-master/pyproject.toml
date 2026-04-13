@@ -1,0 +1,14 @@
+[project]
+name = "scrum-master"
+version = "0.1.0"
+description = "Scrum Master AI Agent that manages Agile events (standups, plannings, reviews, retros)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-adk>=1.5.0",
+    "google-genai>=1.14.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
