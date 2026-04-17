@@ -140,7 +140,7 @@ def get_current_time(city: str) -> dict:
 
 root_agent = Agent(
     name="weather_time_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Agent to answer questions about the time and weather in a city.",
     instruction=(
         "You are a helpful agent who can answer user questions "
@@ -161,7 +161,7 @@ from google.adk.agents import Agent
 # Specialized sub-agents
 billing_agent = Agent(
     name="billing",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles billing inquiries, payment issues, and invoice questions.",
     instruction=(
         "You are a billing specialist. Help users with payment issues, "
@@ -171,7 +171,7 @@ billing_agent = Agent(
 
 support_agent = Agent(
     name="support",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles technical support, troubleshooting, and product issues.",
     instruction=(
         "You are a technical support specialist. Help users troubleshoot "
@@ -181,7 +181,7 @@ support_agent = Agent(
 
 sales_agent = Agent(
     name="sales",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles product inquiries, pricing, and purchase assistance.",
     instruction=(
         "You are a sales specialist. Help users find the right product, "
@@ -192,7 +192,7 @@ sales_agent = Agent(
 # Coordinator routes to appropriate specialist
 root_agent = Agent(
     name="customer_service_coordinator",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Main customer service coordinator.",
     instruction="""You are a customer service coordinator. Analyze the user's
 request and transfer to the most appropriate specialist:
@@ -216,7 +216,7 @@ from google.adk.agents import SequentialAgent, Agent
 # Step 1: Research and gather information
 researcher = Agent(
     name="researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Research the user's topic thoroughly. "
         "Provide detailed findings and key data points."
@@ -227,7 +227,7 @@ researcher = Agent(
 # Step 2: Analyze the research
 analyst = Agent(
     name="analyst",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Analyze the following research findings: {research_findings}. "
         "Identify key trends, insights, and actionable recommendations."
@@ -238,7 +238,7 @@ analyst = Agent(
 # Step 3: Write the final report
 writer = Agent(
     name="writer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Based on this analysis: {analysis_report}, write a professional "
         "report with executive summary, key findings, and recommendations."
@@ -263,21 +263,21 @@ from google.adk.agents import SequentialAgent, ParallelAgent, Agent
 # Parallel research agents
 market_researcher = Agent(
     name="market_researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research current market trends and competitive landscape.",
     output_key="market_data",
 )
 
 financial_researcher = Agent(
     name="financial_researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research financial metrics, revenue data, and growth trends.",
     output_key="financial_data",
 )
 
 sentiment_researcher = Agent(
     name="sentiment_researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research public sentiment, reviews, and social media trends.",
     output_key="sentiment_data",
 )
@@ -292,7 +292,7 @@ parallel_research = ParallelAgent(
 # Synthesize all research results
 synthesizer = Agent(
     name="synthesizer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""Synthesize these research findings into a comprehensive report:
 - Market Data: {market_data}
 - Financial Data: {financial_data}
@@ -320,7 +320,7 @@ from google.adk.tools import exit_loop
 # Draft content
 drafter = Agent(
     name="drafter",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Write or improve content based on the original request and any "
         "feedback: {feedback}. Save the current draft."
@@ -331,7 +331,7 @@ drafter = Agent(
 # Review and decide whether to iterate
 reviewer = Agent(
     name="reviewer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""Review this draft: {current_draft}
 
 If the draft meets quality standards (clear, accurate, well-structured),

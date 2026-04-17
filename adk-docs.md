@@ -56,7 +56,7 @@ def get_current_time(city: str) -> dict:
 
 root_agent = Agent(
     name="weather_time_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Agent to answer questions about the time and weather in a city.",
     instruction="You are a helpful agent who can answer user questions about the time and weather in a city.",
     tools=[get_weather, get_current_time],
@@ -110,7 +110,7 @@ const getCurrentTime = new FunctionTool({
 
 export const rootAgent = new LlmAgent({
   name: 'weather_time_agent',
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3.1-flash-lite-preview',
   description: 'Agent to answer questions about the time and weather in a city.',
   instruction: 'You are a helpful agent who can answer user questions about the time and weather in a city.',
   tools: [getWeather, getCurrentTime],
@@ -134,7 +134,7 @@ SESSION_ID = "session_456"
 # Create the agent
 agent = Agent(
     name="weather_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a helpful weather assistant.",
     tools=[get_weather],
 )
@@ -184,7 +184,7 @@ from google.adk.agents import SequentialAgent, LlmAgent
 # Step 1: Validate input
 validator = LlmAgent(
     name="ValidateInput",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Validate the user input and confirm it's a valid request.",
     output_key="validation_status"
 )
@@ -192,7 +192,7 @@ validator = LlmAgent(
 # Step 2: Process data based on validation
 processor = LlmAgent(
     name="ProcessData",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Process the data if {validation_status} indicates valid input.",
     output_key="result"
 )
@@ -200,7 +200,7 @@ processor = LlmAgent(
 # Step 3: Report the result
 reporter = LlmAgent(
     name="ReportResult",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Generate a user-friendly report based on {result}."
 )
 
@@ -224,14 +224,14 @@ from google.adk.agents import SequentialAgent, ParallelAgent, LlmAgent
 # Agents that fetch data in parallel
 fetch_weather = LlmAgent(
     name="WeatherFetcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Fetch weather data for the user's location.",
     output_key="weather"
 )
 
 fetch_news = LlmAgent(
     name="NewsFetcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Fetch the latest news headlines.",
     output_key="news"
 )
@@ -245,7 +245,7 @@ gatherer = ParallelAgent(
 # Synthesize results after parallel execution
 synthesizer = LlmAgent(
     name="Synthesizer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Create a morning briefing combining {weather} and {news}."
 )
 
@@ -269,7 +269,7 @@ from typing import AsyncGenerator
 # Agent that refines code each iteration
 code_refiner = LlmAgent(
     name="CodeRefiner",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Read state['current_code'] and state['requirements']. Improve the code to better meet requirements.",
     output_key="current_code"
 )
@@ -277,7 +277,7 @@ code_refiner = LlmAgent(
 # Agent that evaluates code quality
 quality_checker = LlmAgent(
     name="QualityChecker",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Evaluate the code in state['current_code']. Output 'pass' or 'fail'.",
     output_key="quality_status"
 )
@@ -308,20 +308,20 @@ from google.adk.agents import LlmAgent
 # Specialized agents
 billing_agent = LlmAgent(
     name="Billing",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles billing inquiries, payment issues, and invoice questions."
 )
 
 support_agent = LlmAgent(
     name="Support",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles technical support requests, troubleshooting, and product issues."
 )
 
 # Coordinator that routes to appropriate specialist
 coordinator = LlmAgent(
     name="HelpDeskCoordinator",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You are a help desk coordinator. Route user requests appropriately:
     - Payment/billing questions -> transfer to Billing agent
     - Technical problems/bugs -> transfer to Support agent
@@ -344,7 +344,7 @@ from google.adk.tools import AgentTool
 # Specialized research agent
 researcher = LlmAgent(
     name="Researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Performs detailed research on a topic and returns findings.",
     instruction="Research the given topic thoroughly and provide a comprehensive summary."
 )
@@ -352,7 +352,7 @@ researcher = LlmAgent(
 # Summarization agent
 summarizer = LlmAgent(
     name="Summarizer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Summarizes long text into concise bullet points.",
     instruction="Create a concise bullet-point summary of the provided text."
 )
@@ -360,7 +360,7 @@ summarizer = LlmAgent(
 # Main agent that uses other agents as tools
 main_agent = LlmAgent(
     name="ReportWriter",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You write reports on topics. Use these tools:
     - Researcher: for gathering detailed information on a topic
     - Summarizer: for condensing long text into key points
@@ -403,7 +403,7 @@ def after_agent_callback(callback_context: CallbackContext) -> types.Content | N
 
 agent = LlmAgent(
     name="CallbackAgent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a helpful assistant.",
     before_agent_callback=before_agent_callback,
     after_agent_callback=after_agent_callback,
@@ -452,7 +452,7 @@ def after_model_callback(
 
 agent = LlmAgent(
     name="GuardedAgent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a helpful assistant.",
     before_model_callback=before_model_callback,
     after_model_callback=after_model_callback,
@@ -507,7 +507,7 @@ def after_tool_callback(
 
 agent = LlmAgent(
     name="ToolCallbackAgent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are an assistant with tool access.",
     tools=[get_weather],
     before_tool_callback=before_tool_callback,
@@ -525,7 +525,7 @@ from google.adk.agents import LlmAgent
 
 agent = LlmAgent(
     name="ConfiguredAgent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a precise and factual assistant.",
     generate_content_config=types.GenerateContentConfig(
         temperature=0.2,  # Lower temperature for more deterministic output
@@ -561,7 +561,7 @@ class CapitalOutput(BaseModel):
 
 structured_agent = LlmAgent(
     name="CapitalInfoAgent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You are a geography expert. When asked about a country's capital,
     respond with accurate information in the required JSON format.
     Include population if known.""",
@@ -686,7 +686,7 @@ from google.adk.runners import Runner
 # Create agent that uses state
 agent = LlmAgent(
     name="StatefulAgent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You are a shopping assistant.
     The user's cart is stored in {cart_items}.
     The user's name is {user_name}.
@@ -743,7 +743,7 @@ approval_tool = LongRunningFunctionTool(func=ask_for_approval)
 
 agent = LlmAgent(
     name="PurchaseAgent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You help users make purchases.
     For purchases over $100, use the approval tool to request manager approval.
     Wait for approval before confirming the purchase.""",

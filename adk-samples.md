@@ -29,7 +29,7 @@ ask_vertex_retrieval = VertexAiRagRetrieval(
 
 # Create the agent with RAG capabilities
 root_agent = Agent(
-    model='gemini-2.0-flash-001',
+    model='gemini-3.1-flash-lite-preview-001',
     name='ask_rag_agent',
     instruction="""You are a documentation assistant. Use the RAG retrieval tool to find relevant
     information and provide accurate answers with proper citations. Always cite your sources.""",
@@ -63,26 +63,26 @@ def analyze_codebase(directory: str) -> dict:
 # Create specialized sub-agents
 blog_planner = Agent(
     name="blog_planner",
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     instruction="Create detailed blog post outlines with clear sections and key points.",
 )
 
 blog_writer = Agent(
     name="blog_writer",
-    model="gemini-2.5-pro",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Write engaging technical blog posts based on approved outlines.",
 )
 
 blog_editor = Agent(
     name="blog_editor",
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     instruction="Review and improve blog posts based on user feedback.",
 )
 
 # Create main orchestrator agent
 interactive_blogger_agent = Agent(
     name="interactive_blogger_agent",
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     description="Technical blogging assistant that collaborates with users to create blog posts.",
     instruction=f"""
     You are a technical blogging assistant. Your workflow:
@@ -147,13 +147,13 @@ def load_database_settings_in_context(callback_context: CallbackContext):
 # Create BQML sub-agent for machine learning tasks
 bqml_agent = LlmAgent(
     name="bqml_agent",
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     instruction="Create and train BigQuery ML models using SQL syntax.",
 )
 
 # Create root orchestrator agent
 root_agent = LlmAgent(
-    model=os.getenv("ROOT_AGENT_MODEL", "gemini-2.0-flash-001"),
+    model=os.getenv("ROOT_AGENT_MODEL", "gemini-3.1-flash-lite-preview-001"),
     name="data_science_root_agent",
     instruction="""You are a Data Science Multi-Agent System.
     Use call_bigquery_agent for database queries and call_analytics_agent for analysis.
@@ -541,7 +541,7 @@ from google.adk.agents import Agent
 
 agent = Agent(
     name="business_assistant",
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     instruction="""You are a business assistant. Use send_email_notification to send
     important updates and query_bigquery_table to access business data.""",
     tools=[
@@ -632,7 +632,7 @@ async def check_inventory_availability(
 # Create agent with async tools
 agent = Agent(
     name="customer_service_agent",
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     instruction="""You are a customer service agent. Help customers schedule appointments
     and check product availability in real-time.""",
     tools=[
@@ -658,7 +658,7 @@ import os
 
 # Example 1: HTTP-based MCP server connection
 currency_agent = LlmAgent(
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     name="currency_agent",
     description="Agent that can help with currency conversions",
     instruction="""You are a specialized assistant for currency conversions.
@@ -675,7 +675,7 @@ currency_agent = LlmAgent(
 # Example 2: Stdio-based MCP server connection
 payment_agent = LlmAgent(
     name="antom_payment_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Agent creates payment links for merchants and queries payment details",
     instruction="""You are an Antom payment agent who can help users create payment links
     and query payment result details. Generate RequestId randomly and describe orders in one sentence.""",
@@ -716,7 +716,7 @@ from google.adk.tools import google_search
 
 # Create specialized sub-agents
 websearch_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model="gemini-3.1-flash-lite-preview",
     name="academic_websearch_agent",
     instruction="Find research papers and academic resources using web search.",
     output_key="recent_citing_papers",
@@ -724,7 +724,7 @@ websearch_agent = LlmAgent(
 )
 
 research_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model="gemini-3.1-flash-lite-preview",
     name="academic_research_agent",
     instruction="Analyze research papers and suggest new research directions.",
 )
@@ -732,7 +732,7 @@ research_agent = LlmAgent(
 # Create coordinator agent that uses sub-agents as tools
 coordinator_agent = LlmAgent(
     name="academic_coordinator",
-    model="gemini-2.5-pro",
+    model="gemini-3.1-flash-lite-preview",
     description="""Analyze seminal papers, provide research advice, locate relevant papers,
     generate new research directions, and access web resources.""",
     instruction="You are an academic research assistant. Delegate tasks to specialized agents.",
@@ -799,7 +799,7 @@ def after_agent_response(callback_context: CallbackContext):
 # Create stateful agent
 financial_agent = Agent(
     name="financial_advisor",
-    model="gemini-2.5-pro",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You are a financial advisor. Track user preferences across conversations
     and provide personalized advice based on their risk tolerance and investment goals.""",
     before_agent_callback=initialize_session_state,
@@ -901,7 +901,7 @@ def safe_database_query(
 
 agent = Agent(
     name="resilient_agent",
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     instruction="Handle errors gracefully and inform users when operations fail.",
     tools=[
         FunctionTool(resilient_api_call),

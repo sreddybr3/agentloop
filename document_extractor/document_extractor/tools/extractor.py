@@ -74,7 +74,7 @@ def extract_document_data(document_text: str, schema_json_str: str) -> dict:
         
         # Make a GenAI API call directly to enforce the dynamic schema.
         client = _get_client()
-        model_name = os.environ.get("EXTRACTION_MODEL", "gemini-2.0-flash")
+        model_name = os.environ.get("EXTRACTION_MODEL", "gemini-3.1-flash-lite-preview")
         
         prompt = f"Extract the requested information from the following document.\n\nDocument:\n{document_text}"
         

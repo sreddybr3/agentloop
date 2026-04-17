@@ -24,7 +24,7 @@ Read the user's request carefully and determine:
    - **Agent-as-Tool (AgentTool)**: Main agent needs to call specialists as tools while maintaining control
    - **Hierarchical**: Complex systems with sub-agent directories
 3. **Tools Needed**: Identify what custom tools the agent needs (API calls, database queries, file operations, calculations, etc.)
-4. **Model**: Default to `gemini-2.0-flash` unless the user specifies otherwise or the task requires advanced reasoning (use `gemini-2.5-pro` for complex analysis)
+4. **Model**: Default to `gemini-3.1-flash-lite-preview` unless the user specifies otherwise or the task requires advanced reasoning (use `gemini-3.1-flash-lite-preview` for complex analysis)
 5. **Special Features**: Determine if the agent needs:
    - Google Search (`google_search` tool)
    - RAG/retrieval (`VertexAiRagRetrieval`)
@@ -110,7 +110,7 @@ def tool_function(param: str) -> dict:
 
 root_agent = Agent(
     name="{agent_name}",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="{What this agent does - used for routing in multi-agent}",
     instruction="""{Detailed instruction for the agent behavior.
 Reference state variables like {variable_name} if needed.}""",
@@ -125,7 +125,7 @@ from google.adk.agents import Agent
 
 specialist_a = Agent(
     name="specialist_a",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="{When to route to this agent}",
     instruction="{Detailed specialist instructions}",
     tools=[],  # Specialist-specific tools
@@ -133,7 +133,7 @@ specialist_a = Agent(
 
 specialist_b = Agent(
     name="specialist_b",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="{When to route to this agent}",
     instruction="{Detailed specialist instructions}",
     tools=[],
@@ -141,7 +141,7 @@ specialist_b = Agent(
 
 root_agent = Agent(
     name="{coordinator_name}",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="{Coordinator description}",
     instruction="""{Routing logic instructions.
 Explain when to transfer to each specialist.}""",
@@ -156,21 +156,21 @@ from google.adk.agents import SequentialAgent, Agent
 
 step_one = Agent(
     name="step_one",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Step 1 instructions}",
     output_key="step_one_result",
 )
 
 step_two = Agent(
     name="step_two",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Step 2 instructions using {step_one_result}}",
     output_key="step_two_result",
 )
 
 step_three = Agent(
     name="step_three",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Final step using {step_two_result}}",
 )
 
@@ -188,14 +188,14 @@ from google.adk.agents import SequentialAgent, ParallelAgent, Agent
 
 worker_a = Agent(
     name="worker_a",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Worker A task}",
     output_key="result_a",
 )
 
 worker_b = Agent(
     name="worker_b",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Worker B task}",
     output_key="result_b",
 )
@@ -207,7 +207,7 @@ parallel_gather = ParallelAgent(
 
 synthesizer = Agent(
     name="synthesizer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Combine {result_a} and {result_b} into final output}",
 )
 
@@ -226,14 +226,14 @@ from google.adk.tools import exit_loop
 
 drafter = Agent(
     name="drafter",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Draft/improve based on {feedback}}",
     output_key="current_draft",
 )
 
 reviewer = Agent(
     name="reviewer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""{Review {current_draft}.
 If satisfactory, call exit_loop tool.
 Otherwise provide feedback.}""",
@@ -257,13 +257,13 @@ from google.adk.tools.agent_tool import AgentTool
 
 specialist = Agent(
     name="specialist",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="{Specialist task instructions}",
 )
 
 root_agent = Agent(
     name="{coordinator_name}",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""{Instructions explaining when to use the specialist tool}""",
     tools=[AgentTool(agent=specialist)],
 )
@@ -383,11 +383,11 @@ adk api_server .
 
 | Use Case | Recommended Model |
 |---|---|
-| General tasks, routing, simple tools | `gemini-2.0-flash` |
-| Complex analysis, writing, reasoning | `gemini-2.5-pro` |
-| Fast simple responses | `gemini-2.0-flash-lite` |
+| General tasks, routing, simple tools | `gemini-3.1-flash-lite-preview` |
+| Complex analysis, writing, reasoning | `gemini-3.1-flash-lite-preview` |
+| Fast simple responses | `gemini-3.1-flash-lite-preview-lite` |
 | Real-time audio conversation | `gemini-live-2.5-flash-preview-native-audio` |
-| Code generation, technical tasks | `gemini-2.5-flash` |
+| Code generation, technical tasks | `gemini-3.1-flash-lite-preview` |
 
 ## Common Patterns Reference
 

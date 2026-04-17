@@ -42,7 +42,7 @@ _configure_logging()
 
 logger = logging.getLogger(__name__)
 
-from document_extractor.agent import root_agent
+from document_extractor.archive.agent import root_agent
 
 
 async def main():

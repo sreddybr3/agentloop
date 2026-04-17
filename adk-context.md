@@ -15,7 +15,7 @@ from google.adk.tools import google_search, FunctionTool
 # Simple agent with built-in Google Search tool
 search_agent = Agent(
     name="search_assistant",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a helpful assistant. Answer user questions using Google Search when needed.",
     description="An assistant that can search the web.",
     tools=[google_search]
@@ -35,7 +35,7 @@ def get_weather(city: str) -> dict:
 
 weather_agent = LlmAgent(
     name="weather_bot",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Help users check the weather. Use the get_weather tool when asked about weather.",
     tools=[get_weather],
     output_key="last_weather_response"  # Store output in session state
@@ -54,7 +54,7 @@ async def validate_after_model(callback_context, llm_response):
 
 validated_agent = Agent(
     name="validated_agent",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a careful assistant that validates all responses.",
     before_model_callback=log_before_model,
     after_model_callback=validate_after_model,
@@ -73,21 +73,21 @@ from google.adk.agents import Agent, LlmAgent
 # Define specialized sub-agents
 greeter_agent = LlmAgent(
     name="greeter",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You handle greetings and introductions warmly.",
     description="Handles greetings and welcomes users."
 )
 
 task_agent = LlmAgent(
     name="task_executor",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You help users complete specific tasks efficiently.",
     description="Handles task execution and follow-through."
 )
 
 researcher_agent = LlmAgent(
     name="researcher",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You research topics and provide detailed information.",
     description="Conducts research and provides information."
 )
@@ -95,7 +95,7 @@ researcher_agent = LlmAgent(
 # Create coordinator with sub-agents
 coordinator = Agent(
     name="coordinator",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="I coordinate between greeting, research, and task execution.",
     instruction="""You are a coordinator agent. Analyze user requests and delegate to:
     - greeter: for greetings and introductions
@@ -122,21 +122,21 @@ from google.adk.agents import SequentialAgent, LlmAgent
 # Define pipeline stages
 analyzer = LlmAgent(
     name="analyzer",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Analyze the user's input and identify key requirements. Store analysis in output_key.",
     output_key="analysis_result"
 )
 
 planner = LlmAgent(
     name="planner",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Based on {analysis_result}, create a detailed action plan.",
     output_key="action_plan"
 )
 
 executor = LlmAgent(
     name="executor",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Execute the following plan: {action_plan}. Provide final results."
 )
 
@@ -158,21 +158,21 @@ from google.adk.agents import ParallelAgent, LlmAgent
 # Define parallel workers
 news_agent = LlmAgent(
     name="news_researcher",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research recent news on the topic.",
     output_key="news_findings"
 )
 
 academic_agent = LlmAgent(
     name="academic_researcher",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Find academic papers and research on the topic.",
     output_key="academic_findings"
 )
 
 social_agent = LlmAgent(
     name="social_researcher",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research social media trends and discussions on the topic.",
     output_key="social_findings"
 )
@@ -196,14 +196,14 @@ from google.adk.tools import exit_loop
 # Define iterative refinement agents
 drafter = LlmAgent(
     name="drafter",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Draft or improve the current document based on feedback: {feedback}",
     output_key="current_draft"
 )
 
 reviewer = LlmAgent(
     name="reviewer",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""Review the draft: {current_draft}
     If satisfactory, use exit_loop tool.
     Otherwise, provide specific feedback for improvement.""",
@@ -308,7 +308,7 @@ delete_tool = FunctionTool(
 # Use tools in an agent
 agent = Agent(
     name="tools_demo",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Help users with calculations, notes, orders, and file management.",
     tools=[calculate_price, save_note, place_order, delete_tool]
 )
@@ -347,7 +347,7 @@ remote_toolset = MCPToolset(
 # Use MCP toolsets in an agent
 file_agent = Agent(
     name="file_manager",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Help users manage files using the available filesystem tools.",
     tools=[filesystem_toolset]
 )
@@ -375,7 +375,7 @@ from google.adk.agents import Agent
 # Create the root agent
 root_agent = Agent(
     name="assistant",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a helpful AI assistant."
 )
 
@@ -396,7 +396,7 @@ compaction_app = App(
     name="long_conversation_app",
     root_agent=root_agent,
     events_compaction_config=EventsCompactionConfig(
-        summarizer=LlmEventSummarizer(model="gemini-2.5-flash"),
+        summarizer=LlmEventSummarizer(model="gemini-3.1-flash-lite-preview"),
         compaction_interval=10,  # Compact every 10 invocations
         overlap_size=2,  # Keep 2 invocations of context overlap
         token_threshold=50000,  # Trigger compaction when tokens exceed threshold
@@ -475,7 +475,7 @@ memory_service = InMemoryMemoryService()
 # Agent with memory tools
 memory_agent = Agent(
     name="memory_agent",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You have access to long-term memory.
     Use load_memory to recall past information.
     Use preload_memory to store important information for future reference.""",
@@ -505,7 +505,7 @@ pip install google-adk
 
 # Create a new agent project
 adk create my_agent_project
-adk create my_agent_project --model gemini-2.5-flash --api_key YOUR_API_KEY
+adk create my_agent_project --model gemini-3.1-flash-lite-preview --api_key YOUR_API_KEY
 
 # Run an agent interactively in the terminal
 adk run path/to/my_agent
@@ -601,7 +601,7 @@ async def after_tool_log(tool, args, tool_context, tool_response):
 
 agent = Agent(
     name="callbacks_demo",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Demonstrate callback functionality.",
     before_agent_callback=before_agent_check,
     after_agent_callback=after_agent_log,
@@ -630,7 +630,7 @@ class TaskAnalysis(BaseModel):
 
 analysis_agent = Agent(
     name="task_analyzer",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Analyze the given task and provide a structured assessment.",
     output_schema=TaskAnalysis,  # Enforces structured output
     output_key="task_analysis"  # Store result in session state
@@ -643,7 +643,7 @@ class TodoItem(BaseModel):
 
 todo_agent = Agent(
     name="todo_generator",
-    model="gemini-2.5-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Generate a todo list for the given project.",
     output_schema=list[TodoItem]  # List of structured items
 )
@@ -668,7 +668,7 @@ async def run_agent_example():
     # Create agent
     agent = Agent(
         name="demo_agent",
-        model="gemini-2.5-flash",
+        model="gemini-3.1-flash-lite-preview",
         instruction="You are a helpful assistant."
     )
 

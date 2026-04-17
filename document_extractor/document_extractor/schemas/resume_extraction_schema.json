@@ -1,0 +1,13 @@
+{
+  "candidate_name": "Full name of the candidate",
+  "email": "Email address of the candidate",
+  "phone": "Phone number of the candidate",
+  "location": "City, state, or full address",
+  "summary": "Professional summary or objective",
+  "total_years_of_experience": "Total years of professional experience",
+  "skills": "List of technical and soft skills",
+  "education": "List of educational qualifications (degree, institution, graduation year)",
+  "work_experience": "List of professional work experience (company, job title, dates, responsibilities)",
+  "certifications": "List of professional certifications (name, issuing organization, year)",
+  "languages": "List of languages spoken"
+}

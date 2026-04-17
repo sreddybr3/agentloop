@@ -140,7 +140,7 @@ def get_current_time(city: str) -> dict:
 
 root_agent = Agent(
     name="weather_time_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Agent to answer questions about the time and weather in a city.",
     instruction=(
         "You are a helpful agent who can answer user questions "
@@ -161,7 +161,7 @@ from google.adk.agents import Agent
 # Specialized sub-agents
 billing_agent = Agent(
     name="billing",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles billing inquiries, payment issues, and invoice questions.",
     instruction=(
         "You are a billing specialist. Help users with payment issues, "
@@ -171,7 +171,7 @@ billing_agent = Agent(
 
 support_agent = Agent(
     name="support",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles technical support, troubleshooting, and product issues.",
     instruction=(
         "You are a technical support specialist. Help users troubleshoot "
@@ -181,7 +181,7 @@ support_agent = Agent(
 
 sales_agent = Agent(
     name="sales",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Handles product inquiries, pricing, and purchase assistance.",
     instruction=(
         "You are a sales specialist. Help users find the right product, "
@@ -192,7 +192,7 @@ sales_agent = Agent(
 # Coordinator routes to appropriate specialist
 root_agent = Agent(
     name="customer_service_coordinator",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Main customer service coordinator.",
     instruction="""You are a customer service coordinator. Analyze the user's
 request and transfer to the most appropriate specialist:
@@ -216,7 +216,7 @@ from google.adk.agents import SequentialAgent, Agent
 # Step 1: Research and gather information
 researcher = Agent(
     name="researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Research the user's topic thoroughly. "
         "Provide detailed findings and key data points."
@@ -227,7 +227,7 @@ researcher = Agent(
 # Step 2: Analyze the research
 analyst = Agent(
     name="analyst",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Analyze the following research findings: {research_findings}. "
         "Identify key trends, insights, and actionable recommendations."
@@ -238,7 +238,7 @@ analyst = Agent(
 # Step 3: Write the final report
 writer = Agent(
     name="writer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Based on this analysis: {analysis_report}, write a professional "
         "report with executive summary, key findings, and recommendations."
@@ -263,21 +263,21 @@ from google.adk.agents import SequentialAgent, ParallelAgent, Agent
 # Parallel research agents
 market_researcher = Agent(
     name="market_researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research current market trends and competitive landscape.",
     output_key="market_data",
 )
 
 financial_researcher = Agent(
     name="financial_researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research financial metrics, revenue data, and growth trends.",
     output_key="financial_data",
 )
 
 sentiment_researcher = Agent(
     name="sentiment_researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Research public sentiment, reviews, and social media trends.",
     output_key="sentiment_data",
 )
@@ -292,7 +292,7 @@ parallel_research = ParallelAgent(
 # Synthesize all research results
 synthesizer = Agent(
     name="synthesizer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""Synthesize these research findings into a comprehensive report:
 - Market Data: {market_data}
 - Financial Data: {financial_data}
@@ -320,7 +320,7 @@ from google.adk.tools import exit_loop
 # Draft content
 drafter = Agent(
     name="drafter",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Write or improve content based on the original request and any "
         "feedback: {feedback}. Save the current draft."
@@ -331,7 +331,7 @@ drafter = Agent(
 # Review and decide whether to iterate
 reviewer = Agent(
     name="reviewer",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""Review this draft: {current_draft}
 
 If the draft meets quality standards (clear, accurate, well-structured),
@@ -363,7 +363,7 @@ from google.adk.tools import google_search
 # Specialist agents used as tools
 web_researcher = Agent(
     name="web_researcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Search the web and provide detailed findings on the topic.",
     tools=[google_search],
     output_key="web_findings",
@@ -371,7 +371,7 @@ web_researcher = Agent(
 
 data_analyst = Agent(
     name="data_analyst",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction=(
         "Analyze the provided data and generate insights with "
         "statistics and visualizations descriptions."
@@ -381,7 +381,7 @@ data_analyst = Agent(
 # Main agent uses specialists as tools
 root_agent = Agent(
     name="research_coordinator",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You are a research coordinator. Use these tools:
 - web_researcher: for finding information online
 - data_analyst: for analyzing data and generating insights
@@ -405,7 +405,7 @@ from google.adk.tools import google_search
 
 research_agent = Agent(
     name="research_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Conducts web research on topics.",
     instruction=(
         "You are a research specialist. Use Google Search to find "
@@ -422,7 +422,7 @@ from google.adk.agents import Agent
 
 analyst_agent = Agent(
     name="analyst_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Analyzes research data and provides insights.",
     instruction=(
         "You are a data analyst. Analyze the information provided, "
@@ -445,7 +445,7 @@ from .sub_agents import research_agent, analyst_agent
 
 root_agent = Agent(
     name="hierarchical_coordinator",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="Coordinates research and analysis workflows.",
     instruction="""You are a project coordinator managing a team:
 - research_agent: for gathering information via web search
@@ -527,7 +527,7 @@ from .tools.customer_tools import lookup_customer, update_customer_preference
 
 root_agent = Agent(
     name="customer_assistant",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You are a customer service assistant.
 Use lookup_customer to find customer information.
 Use update_customer_preference to modify customer preferences.
@@ -620,7 +620,7 @@ def after_tool_callback(
 
 root_agent = Agent(
     name="guarded_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a helpful assistant with safety guardrails.",
     before_agent_callback=before_agent_callback,
     after_agent_callback=after_agent_callback,
@@ -660,7 +660,7 @@ rag_retrieval_tool = VertexAiRagRetrieval(
 )
 
 root_agent = Agent(
-    model="gemini-2.0-flash-001",
+    model="gemini-3.1-flash-lite-preview-001",
     name="rag_assistant",
     instruction="""You are a documentation assistant powered by a knowledge base.
 Use the retrieve_documentation tool to find relevant information before answering.
@@ -680,7 +680,7 @@ from google.adk.agents import Agent
 from google.adk.tools.mcp_tool import MCPToolset, StreamableHTTPConnectionParams
 
 root_agent = Agent(
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     name="mcp_agent",
     description="Agent that uses external MCP tools.",
     instruction="""You are a helpful assistant with access to external tools
@@ -703,7 +703,7 @@ from google.adk.tools.mcp_tool import MCPToolset, StdioConnectionParams
 from mcp import StdioServerParameters
 
 root_agent = Agent(
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     name="mcp_stdio_agent",
     instruction="You are a helpful assistant using MCP tools.",
     tools=[
@@ -739,7 +739,7 @@ class AnalysisResult(BaseModel):
 
 root_agent = Agent(
     name="structured_analyst",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""Analyze the user's input and provide a structured analysis.
 Include a summary, key findings, sentiment assessment, confidence score,
 and actionable recommendations.""",
@@ -759,7 +759,7 @@ from google.genai import types
 
 root_agent = Agent(
     name="precise_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a precise, factual assistant.",
     generate_content_config=types.GenerateContentConfig(
         temperature=0.1,
@@ -792,7 +792,7 @@ SESSION_ID = "session_456"
 
 agent = Agent(
     name="my_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="You are a helpful assistant.",
     tools=[],
 )
@@ -859,7 +859,7 @@ def get_user_profile(user_id: str) -> dict:
 
 profile_fetcher = Agent(
     name="profile_fetcher",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="Use get_user_profile to fetch the user's profile. Pass 'current_user' as user_id.",
     tools=[get_user_profile],
     output_key="user_profile",
@@ -867,7 +867,7 @@ profile_fetcher = Agent(
 
 personalized_responder = Agent(
     name="personalized_responder",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     instruction="""You are a personalized assistant.
 The user's profile is: {user_profile}
 Tailor your responses based on their role, interests, and preferences.""",
@@ -890,7 +890,7 @@ from google.adk.tools import google_search
 
 root_agent = Agent(
     name="search_agent",
-    model="gemini-2.0-flash",
+    model="gemini-3.1-flash-lite-preview",
     description="An assistant that can search the web.",
     instruction="""You are a helpful research assistant. Use Google Search to find
 current, accurate information to answer user questions.
