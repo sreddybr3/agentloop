@@ -17,20 +17,9 @@ def _get_client() -> Client:
     """Return a cached GenAI Client, creating one if needed."""
     global _client
     if _client is None:
-        vertexai = os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "0") == "1"
-        if vertexai:
-            project = os.environ.get("GOOGLE_CLOUD_PROJECT")
-            location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
-            logger.debug("Creating Vertex AI client: project=%s, location=%s", project, location)
-            _client = Client(
-                vertexai=True,
-                project=project,
-                location=location,
-            )
-        else:
-            logger.debug("Creating API-key client")
-            _client = Client(api_key=os.environ.get("GOOGLE_API_KEY"))
-        logger.info("GenAI Client created (vertexai=%s)", vertexai)
+        _client = Client(
+            vertexai=True
+        )
     return _client
 
 
