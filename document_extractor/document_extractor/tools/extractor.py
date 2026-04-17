@@ -96,3 +96,76 @@ def extract_document_data(document_text: str, schema_json_str: str) -> dict:
         tb = traceback.format_exc()
         logger.error("extract_document_data failed: %s\n%s", e, tb)
         return {"status": "error", "error_message": f"{type(e).__name__}: {e}"}
+
+
+def extract_from_pdf(pdf_file_path: str, schema_json_str: str) -> dict:
+    """Extracts structured data from a PDF file by sending it directly to the Gemini model.
+
+    The PDF binary is sent natively to the model for multimodal understanding —
+    no intermediate text extraction is performed.
+
+    Args:
+        pdf_file_path: The absolute or relative file-system path to the PDF file.
+        schema_json_str: A JSON string containing key-value pairs where the key is the desired field name and the value is the description of the field.
+
+    Returns:
+        dict: The extracted data matching the requested schema, or an error status.
+    """
+    logger.info("extract_from_pdf called — pdf_file_path=%s, schema length=%d", pdf_file_path, len(schema_json_str))
+
+    try:
+        # --- validate & read the PDF ------------------------------------------------
+        if not os.path.isfile(pdf_file_path):
+            return {"status": "error", "error_message": f"File not found: {pdf_file_path}"}
+
+        with open(pdf_file_path, "rb") as f:
+            pdf_bytes = f.read()
+
+        logger.info("Read PDF file: %d bytes", len(pdf_bytes))
+
+        # --- build the dynamic response schema -------------------------------------
+        schema_definition = json.loads(schema_json_str)
+        if not isinstance(schema_definition, dict):
+            logger.error("Schema is not a dict: %s", type(schema_definition))
+            return {"status": "error", "error_message": "Schema definition must be a JSON object (dictionary)."}
+
+        DynamicModel = build_dynamic_schema(schema_definition)
+
+        # --- call Gemini with native PDF part --------------------------------------
+        client = _get_client()
+        model_name = os.environ.get("EXTRACTION_MODEL", "gemini-3.1-flash-lite-preview")
+
+        contents = [
+            types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+            "Extract the requested information from this PDF document.",
+        ]
+
+        logger.info("Calling GenAI model=%s with PDF part and response_schema enforcement", model_name)
+        response = client.models.generate_content(
+            model=model_name,
+            contents=contents,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=DynamicModel,
+                temperature=0.0,
+            ),
+        )
+
+        logger.debug("Raw model response text: %s", response.text)
+        extracted_json = response.text
+        if extracted_json:
+            parsed_data = json.loads(extracted_json)
+            logger.info("PDF extraction succeeded — %d fields returned", len(parsed_data))
+            logger.debug("Extracted data: %s", json.dumps(parsed_data, indent=2))
+            return {"status": "success", "data": parsed_data}
+        else:
+            logger.warning("Model returned an empty response")
+            return {"status": "error", "error_message": "Model returned an empty response."}
+
+    except json.JSONDecodeError as e:
+        logger.error("Invalid JSON in schema: %s", e)
+        return {"status": "error", "error_message": f"Invalid JSON in schema: {e}"}
+    except Exception as e:
+        tb = traceback.format_exc()
+        logger.error("extract_from_pdf failed: %s\n%s", e, tb)
+        return {"status": "error", "error_message": f"{type(e).__name__}: {e}"}
