@@ -1,0 +1,12 @@
+{
+  "test_cases": [
+    {
+      "user_query": "Extract data from this document using the provided schema.\nDocument:\nReceipt #8899\nDate: 2026-05-01\nTotal: $45.50\nStore: Target\nSchema:\n{\"receipt_id\": \"The receipt ID\", \"total\": \"The total amount\"}",
+      "expected_tools": ["extract_document_data"],
+      "expected_tool_args": {
+          "schema_json_str": "{\"receipt_id\": \"The receipt ID\", \"total\": \"The total amount\"}"
+      },
+      "reference_answer": "Receipt ID is 8899 and total is 45.50"
+    }
+  ]
+}

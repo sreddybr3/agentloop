@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "agentloop",
+			"path": "../../Documents/GitHub/agentloop"
+		},
+		{
+			"name": "document_extractor",
+			"path": "."
+		}
+	],
+	"settings": {}
+}
