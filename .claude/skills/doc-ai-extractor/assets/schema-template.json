@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Document Extraction Schema",
+  "description": "Schema definition for extracting structured data from PDF documents",
+  "type": "object",
+  "required": ["keys"],
+  "properties": {
+    "keys": {
+      "type": "array",
+      "description": "List of keys to extract from the document",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "key_type", "data_type", "description"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The key name for the extracted value",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "key_type": {
+            "type": "string",
+            "description": "Type of extraction: field (single value) or list (array)",
+            "enum": ["field", "list"]
+          },
+          "data_type": {
+            "type": "string",
+            "description": "Data type of the extracted value",
+            "enum": ["string", "number"]
+          },
+          "description": {
+            "type": "string",
+            "description": "Description to help AI understand what to extract",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "mandatory_keys": {
+      "type": "array",
+      "description": "List of key names that must be extracted; extraction fails if any are missing",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,1 @@
+# This file makes the 'document_extractor' directory a Python package.

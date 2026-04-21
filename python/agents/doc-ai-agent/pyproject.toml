@@ -1,0 +1,15 @@
+[project]
+name = "doc-ai-agent"
+version = "0.1.0"
+description = "An ADK agent that uses a skill to extract structured data from PDF documents."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "google-adk>=1.5.0",
+    "google-genai>=1.14.0",
+    "PyPDF2"
+]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.backends._legacy:_Backend"

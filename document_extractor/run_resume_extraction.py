@@ -46,7 +46,7 @@ _configure_logging()
 
 logger = logging.getLogger(__name__)
 
-from document_extractor.archive.agent import root_agent  # noqa: E402
+from document_extractor.document_extractor.agent import root_agent  # noqa: E402
 from document_extractor.schemas import resume_schema_to_extraction_format  # noqa: E402
 
 SAMPLE_RESUME = """\

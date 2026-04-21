@@ -1,7 +1,5 @@
-"""Local document extractor tool that uses Ollama (Gemma4) instead of Google GenAI.
-
-This module mirrors the interface of extractor.py but sends requests to a
-locally-running Ollama server for fully offline / on-prem extraction.
+"""Local document extractor tool that uses Ollama (Gemma4) for both text and
+PDF extraction.
 
 Environment variables:
     OLLAMA_BASE_URL   – Ollama API base URL  (default: http://localhost:11434)
@@ -20,8 +18,8 @@ import fitz  # PyMuPDF – used to render PDF pages as images
 
 logger = logging.getLogger(__name__)
 
-_OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-_OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "gemma4:latest")
+_OLLAMA_BASE_URL = os.environ.get("LM_BASE_URL", "http://localhost:1234/v1")
+_OLLAMA_MODEL = os.environ.get("LM_MODEL", "lm_studio/gemma-4-e2b")
 
 # Timeout for Ollama requests (generation can be slow on CPU)
 _REQUEST_TIMEOUT = float(os.environ.get("OLLAMA_TIMEOUT", "120"))
@@ -91,8 +89,8 @@ def extract_document_data_local(document_text: str, schema_json_str: str) -> dic
         prompt = _build_extraction_prompt(document_text, schema_definition)
         json_schema = _build_json_schema(schema_definition)
 
-        ollama_url = os.environ.get("OLLAMA_BASE_URL", _OLLAMA_BASE_URL)
-        ollama_model = os.environ.get("OLLAMA_MODEL", _OLLAMA_MODEL)
+        ollama_url = os.environ.get("LM_BASE_URL", "http://localhost:1234/v1")
+        ollama_model = os.environ.get("LM_MODEL", "lm_studio/gemma-4-e2b")
         api_url = f"{ollama_url.rstrip('/')}/api/chat"
 
         logger.info("Calling Ollama model=%s at %s", ollama_model, api_url)
@@ -113,8 +111,8 @@ def extract_document_data_local(document_text: str, schema_json_str: str) -> dic
 
         logger.debug("Ollama request payload (without prompt): model=%s, stream=False, temperature=0.0", ollama_model)
 
-        with httpx.Client(timeout=_REQUEST_TIMEOUT) as client:
-            response = client.post(api_url, json=payload)
+        with httpx.Client(timeout=_REQUEST_TIMEOUT) as http_client:
+            response = http_client.post(api_url, json=payload)
             response.raise_for_status()
 
         response_json = response.json()
@@ -203,37 +201,33 @@ def extract_from_pdf_local(pdf_file_path: str, schema_json_str: str) -> dict:
     )
 
     try:
-        # --- validate the file exists ------------------------------------------------
+        # --- validate the file -------------------------------------------------------
         if not os.path.isfile(pdf_file_path):
             return {"status": "error", "error_message": f"File not found: {pdf_file_path}"}
 
-        # --- convert PDF pages to base64 images -------------------------------------
-        page_images = _pdf_to_base64_images(pdf_file_path)
-        if not page_images:
-            return {"status": "error", "error_message": "PDF has no pages."}
-
-        # --- parse schema and build prompt ------------------------------------------
+        # --- parse schema ------------------------------------------------------------
         schema_definition = json.loads(schema_json_str)
         if not isinstance(schema_definition, dict):
             logger.error("Schema is not a dict: %s", type(schema_definition))
-            return {
-                "status": "error",
-                "error_message": "Schema definition must be a JSON object (dictionary).",
-            }
+            return {"status": "error", "error_message": "Schema definition must be a JSON object (dictionary)."}
 
+        # --- convert PDF pages to base64 images --------------------------------------
+        page_images = _pdf_to_base64_images(pdf_file_path)
+        if not page_images:
+            return {"status": "error", "error_message": "PDF has no pages or could not be rendered."}
+
+        # --- build prompt and JSON schema for structured output ----------------------
         prompt = _build_pdf_extraction_prompt(schema_definition)
         json_schema = _build_json_schema(schema_definition)
 
-        ollama_url = os.environ.get("OLLAMA_BASE_URL", _OLLAMA_BASE_URL)
-        ollama_model = os.environ.get("OLLAMA_MODEL", _OLLAMA_MODEL)
+        ollama_url = os.environ.get("LM_BASE_URL", "http://localhost:1234/v1")
+        ollama_model = os.environ.get("LM_MODEL", "lm_studio/gemma-4-e2b")
         api_url = f"{ollama_url.rstrip('/')}/api/chat"
 
-        logger.info(
-            "Calling Ollama model=%s at %s with %d page image(s)",
-            ollama_model, api_url, len(page_images),
-        )
+        logger.info("Calling Ollama model=%s at %s with %d page image(s)", ollama_model, api_url, len(page_images))
 
-        # Ollama /api/chat accepts images as base64 strings in the "images" field
+        # Ollama's /api/chat supports an "images" field for multimodal models.
+        # Each image is a base64-encoded string (no data-URI prefix).
         payload = {
             "model": ollama_model,
             "messages": [
@@ -250,8 +244,8 @@ def extract_from_pdf_local(pdf_file_path: str, schema_json_str: str) -> dict:
             },
         }
 
-        with httpx.Client(timeout=_REQUEST_TIMEOUT) as client:
-            response = client.post(api_url, json=payload)
+        with httpx.Client(timeout=_REQUEST_TIMEOUT) as http_client:
+            response = http_client.post(api_url, json=payload)
             response.raise_for_status()
 
         response_json = response.json()
