@@ -1,0 +1,134 @@
+[
+  {
+    "name": "candidate_name",
+    "description": "Full name of the candidate",
+    "entity_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "email",
+    "description": "Email address of the candidate",
+    "entity_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "phone",
+    "description": "Phone number of the candidate",
+    "entity_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "location",
+    "description": "City, state, or full address of the candidate",
+    "entity_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "summary",
+    "description": "Professional summary or objective statement from the resume",
+    "entity_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "total_years_of_experience",
+    "description": "Total years of professional experience",
+    "key_type": "Field",
+    "data_type": "number"
+  },
+  {
+    "name": "skills",
+    "description": "List of technical and soft skills mentioned in the resume",
+    "key_type": "Group",
+    "data_type": "array<string>"
+  },
+  {
+    "name": "education",
+    "description": "Educational qualifications including degree, institution, and graduation year",
+    "key_type": "Group",
+    "data_type": "array<object>"
+  },
+  {
+    "name": "education.degree",
+    "description": "Degree or certification obtained (e.g., B.Tech, MBA, PhD)",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "education.institution",
+    "description": "Name of the university or educational institution",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "education.graduation_year",
+    "description": "Year of graduation or expected graduation",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "work_experience",
+    "description": "Professional work experience entries including company, role, duration, and responsibilities",
+    "key_type": "Group",
+    "data_type": "array<object>"
+  },
+  {
+    "name": "work_experience.company",
+    "description": "Name of the employer or company",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "work_experience.job_title",
+    "description": "Job title or role held at the company",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "work_experience.start_date",
+    "description": "Start date of employment",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "work_experience.end_date",
+    "description": "End date of employment or 'Present' if currently employed",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "work_experience.responsibilities",
+    "description": "Key responsibilities and achievements in the role",
+    "key_type": "Group",
+    "data_type": "array<string>"
+  },
+  {
+    "name": "certifications",
+    "description": "Professional certifications and licenses",
+    "key_type": "Group",
+    "data_type": "array<object>"
+  },
+  {
+    "name": "certifications.name",
+    "description": "Name of the certification",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "certifications.issuing_organization",
+    "description": "Organization that issued the certification",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "certifications.year",
+    "description": "Year the certification was obtained",
+    "key_type": "Field",
+    "data_type": "string"
+  },
+  {
+    "name": "languages",
+    "description": "Languages spoken by the candidate",
+    "key_type": "Group",
+    "data_type": "array<string>"
+  }
+]

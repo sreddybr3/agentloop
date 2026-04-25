@@ -1,278 +1,242 @@
-"""Local document extractor tool that uses Ollama (Gemma4) for both text and
-PDF extraction.
+"""Local document extractor: Docling (Parse) + Qwen3.5:4B (Extract).
+
+Architecture:
+  PARSE:   Docling converts PDF/DOCX/images to Markdown, tables, chunks
+  EXTRACT: Qwen3.5:4B (Ollama) performs schema-driven JSON extraction
 
 Environment variables:
-    OLLAMA_BASE_URL   – Ollama API base URL  (default: http://localhost:11434)
-    OLLAMA_MODEL      – Model name to use    (default: gemma4:latest)
+    OLLAMA_BASE_URL  (default: http://localhost:11434)
+    OLLAMA_MODEL     (default: qwen3.5:4b)
+    OLLAMA_TIMEOUT   (default: 180)
 """
-
-import base64
-import json
-import logging
-import os
-import traceback
-from typing import Dict, List
-
+import base64, json, logging, os, tempfile, traceback
+from typing import Any, Dict, List
 import httpx
-import fitz  # PyMuPDF – used to render PDF pages as images
+from docling.document_converter import DocumentConverter
 
 logger = logging.getLogger(__name__)
+_OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+_OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3.5:4b")
+_REQUEST_TIMEOUT = float(os.environ.get("OLLAMA_TIMEOUT", "180"))
 
-_OLLAMA_BASE_URL = os.environ.get("LM_BASE_URL", "http://localhost:1234/v1")
-_OLLAMA_MODEL = os.environ.get("LM_MODEL", "lm_studio/gemma-4-e2b")
-
-# Timeout for Ollama requests (generation can be slow on CPU)
-_REQUEST_TIMEOUT = float(os.environ.get("OLLAMA_TIMEOUT", "120"))
-
-
-def _build_extraction_prompt(document_text: str, schema_definition: Dict[str, str]) -> str:
-    """Build a prompt that instructs the model to return valid JSON matching the schema."""
-    field_descriptions = "\n".join(
-        f'  - "{key}": {description}' for key, description in schema_definition.items()
-    )
-    return f"""You are a precise document data extractor. Extract the requested fields from the document below.
-
-Return ONLY a valid JSON object with the following fields:
-{field_descriptions}
-
-Rules:
-- Return raw JSON only — no markdown fences, no explanation, no extra text.
-- If a field is not found in the document, use an empty string "".
-- For numeric fields, return the value as a string.
-
-Document:
-{document_text}
-
-JSON:"""
-
-
-def _build_json_schema(schema_definition: Dict[str, str]) -> dict:
-    """Build a JSON Schema object for Ollama structured output (format parameter)."""
-    properties = {}
-    for key, description in schema_definition.items():
-        properties[key] = {"type": "string", "description": description}
-    return {
-        "type": "object",
-        "properties": properties,
-        "required": list(schema_definition.keys()),
+def _parse_document_with_docling(source: str) -> Dict[str, Any]:
+    """Use Docling to parse a document into Markdown, tables, metadata."""
+    logger.info("Docling PARSE: %s", source)
+    converter = DocumentConverter()
+    result = converter.convert(source)
+    doc = result.document
+    markdown_output = doc.export_to_markdown()
+    tables_data = []
+    if hasattr(doc, "tables") and doc.tables:
+        for i, table in enumerate(doc.tables):
+            try:
+                tmd = table.export_to_markdown() if hasattr(table, "export_to_markdown") else str(table)
+                tables_data.append({"table_index": i, "markdown": tmd})
+            except Exception as te:
+                logger.warning("Table %d failed: %s", i, te)
+                tables_data.append({"table_index": i, "markdown": "[failed]"})
+    metadata = {
+        "num_pages": len(doc.pages) if hasattr(doc, "pages") else 0,
+        "num_tables": len(tables_data),
+        "source": source,
     }
+    chunks = []
+    try:
+        for item_tuple in doc.iterate_items():
+            # iterate_items() yields (NodeItem, level) tuples
+            item, _level = item_tuple
+            ci: Dict[str, Any] = {"type": type(item).__name__}
+            text_val = getattr(item, "text", None)
+            export_fn = getattr(item, "export_to_markdown", None)
+            if text_val is not None:
+                ci["text"] = text_val
+            elif callable(export_fn):
+                ci["text"] = export_fn()
+            else:
+                ci["text"] = str(item)
+            chunks.append(ci)
+    except Exception as ce:
+        logger.warning("Chunk iteration failed: %s", ce)
+        for para in markdown_output.split("\n\n"):
+            s = para.strip()
+            if s:
+                chunks.append({"type": "text", "text": s})
+    logger.info("PARSE done: %d chars, %d tables, %d chunks", len(markdown_output), len(tables_data), len(chunks))
+    return {"markdown": markdown_output, "tables": tables_data, "metadata": metadata, "chunks": chunks}
 
+
+def _parse_base64_pdf_with_docling(pdf_data_base64: str) -> Dict[str, Any]:
+    """Parse a base64-encoded PDF using Docling via temp file."""
+    pdf_bytes = base64.b64decode(pdf_data_base64)
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+        tmp.write(pdf_bytes)
+        tmp_path = tmp.name
+    try:
+        return _parse_document_with_docling(tmp_path)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+def _build_extraction_prompt(doc_md: str, schema_def: Dict[str, str]) -> str:
+    """Build prompt for Qwen3.5 to return JSON matching the schema."""
+    lines = []
+    for k, v in schema_def.items():
+        lines.append('  - "' + k + '": ' + v)
+    fields = "\n".join(lines)
+    p = "You are a precise document data extractor. Extract fields from the document below.\n\n"
+    p += "The document was pre-parsed with layout analysis (Markdown format).\n\n"
+    p += "Return ONLY a valid JSON object with these fields:\n" + fields + "\n\n"
+    p += "Rules:\n- Raw JSON only, no markdown fences, no explanation.\n"
+    p += "- Missing fields: empty string. Numeric fields: string. Arrays: JSON array.\n"
+    p += "- Extract table cell data accurately.\n\n"
+    p += "Document:\n---\n" + doc_md + "\n---\n\nJSON:"
+    return p
+
+
+def _build_json_schema(schema_def: Dict[str, str]) -> dict:
+    """Build JSON Schema for Ollama structured output."""
+    props = {k: {"type": "string", "description": v} for k, v in schema_def.items()}
+    return {"type": "object", "properties": props, "required": list(schema_def.keys())}
+
+
+def _call_qwen_extraction(doc_md: str, schema_def: Dict[str, str]) -> dict:
+    """Call Qwen3.5:4B via Ollama for schema-driven extraction."""
+    prompt = _build_extraction_prompt(doc_md, schema_def)
+    jschema = _build_json_schema(schema_def)
+    url = os.environ.get("OLLAMA_BASE_URL", _OLLAMA_BASE_URL).rstrip("/") + "/api/chat"
+    model = os.environ.get("OLLAMA_MODEL", _OLLAMA_MODEL)
+    model = os.environ.get("MODEL_NAME", "gemini-3.1-flash-lite-preview")
+    logger.info("EXTRACT: model=%s doc=%d chars", model, len(doc_md))
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "format": jschema, "stream": False,
+        "options": {"temperature": 0.0, "num_ctx": 4096, "max_tokens": 4096},
+    }
+    with httpx.Client(timeout=_REQUEST_TIMEOUT) as c:
+        r = c.post(url, json=payload)
+        r.raise_for_status()
+    raw = r.json().get("message", {}).get("content", "")
+    if not raw:
+        raise ValueError("Qwen3.5 returned empty response.")
+    return json.loads(raw)
 
 def extract_document_data_local(document_text: str, schema_json_str: str) -> dict:
-    """Extracts structured data from a document using a local Ollama model.
+    """Extract structured data from text using Qwen3.5 (skip Docling parse).
 
     Args:
-        document_text: The text content of the document to extract data from.
-        schema_json_str: A JSON string containing key-value pairs where the key
-            is the desired field name and the value is the description of the field.
-
+        document_text: Document text content.
+        schema_json_str: JSON string of {field_name: description} pairs.
     Returns:
-        dict: The extracted data matching the requested schema, or an error status.
+        dict with status and data or error_message.
     """
-    logger.info(
-        "extract_document_data_local called — document length=%d, schema length=%d",
-        len(document_text),
-        len(schema_json_str),
-    )
-    logger.debug("schema_json_str: %s", schema_json_str)
-    logger.debug("document_text (first 500 chars): %s", document_text[:500])
-
+    logger.info("extract_document_data_local: doc=%d, schema=%d", len(document_text), len(schema_json_str))
     try:
-        schema_definition = json.loads(schema_json_str)
-        if not isinstance(schema_definition, dict):
-            logger.error("Schema is not a dict: %s", type(schema_definition))
-            return {
-                "status": "error",
-                "error_message": "Schema definition must be a JSON object (dictionary).",
-            }
-
-        prompt = _build_extraction_prompt(document_text, schema_definition)
-        json_schema = _build_json_schema(schema_definition)
-
-        ollama_url = os.environ.get("LM_BASE_URL", "http://localhost:1234/v1")
-        ollama_model = os.environ.get("LM_MODEL", "lm_studio/gemma-4-e2b")
-        api_url = f"{ollama_url.rstrip('/')}/api/chat"
-
-        logger.info("Calling Ollama model=%s at %s", ollama_model, api_url)
-        logger.debug("JSON schema for structured output: %s", json.dumps(json_schema, indent=2))
-
-        # Use Ollama's /api/chat endpoint with structured output (format param)
-        payload = {
-            "model": ollama_model,
-            "messages": [
-                {"role": "user", "content": prompt},
-            ],
-            "format": json_schema,
-            "stream": False,
-            "options": {
-                "temperature": 0.0,
-            },
-        }
-
-        logger.debug("Ollama request payload (without prompt): model=%s, stream=False, temperature=0.0", ollama_model)
-
-        with httpx.Client(timeout=_REQUEST_TIMEOUT) as http_client:
-            response = http_client.post(api_url, json=payload)
-            response.raise_for_status()
-
-        response_json = response.json()
-        raw_text = response_json.get("message", {}).get("content", "")
-        logger.debug("Raw Ollama response text: %s", raw_text)
-
-        if not raw_text:
-            logger.warning("Ollama returned an empty response")
-            return {"status": "error", "error_message": "Model returned an empty response."}
-
-        # Parse the JSON from the model response
-        parsed_data = json.loads(raw_text)
-        logger.info("Extraction succeeded — %d fields returned", len(parsed_data))
-        logger.debug("Extracted data: %s", json.dumps(parsed_data, indent=2))
-        return {"status": "success", "data": parsed_data}
-
+        sd = json.loads(schema_json_str)
+        if not isinstance(sd, dict):
+            return {"status": "error", "error_message": "Schema must be a JSON object."}
+        data = _call_qwen_extraction(document_text, sd)
+        return {"status": "success", "data": data}
     except httpx.ConnectError:
-        msg = f"Cannot connect to Ollama at {_OLLAMA_BASE_URL}. Is Ollama running?"
-        logger.error(msg)
-        return {"status": "error", "error_message": msg}
+        return {"status": "error", "error_message": "Cannot connect to Ollama at " + _OLLAMA_BASE_URL}
     except httpx.HTTPStatusError as e:
-        msg = f"Ollama HTTP error {e.response.status_code}: {e.response.text[:300]}"
-        logger.error(msg)
-        return {"status": "error", "error_message": msg}
+        return {"status": "error", "error_message": "Ollama HTTP " + str(e.response.status_code)}
     except json.JSONDecodeError as e:
-        logger.error("Invalid JSON in response or schema: %s", e)
-        return {"status": "error", "error_message": f"Invalid JSON: {e}"}
+        return {"status": "error", "error_message": "Invalid JSON: " + str(e)}
     except Exception as e:
-        tb = traceback.format_exc()
-        logger.error("extract_document_data_local failed: %s\n%s", e, tb)
-        return {"status": "error", "error_message": f"{type(e).__name__}: {e}"}
+        logger.error("Failed: %s\n%s", e, traceback.format_exc())
+        return {"status": "error", "error_message": str(e)}
 
 
-def _pdf_to_base64_images(pdf_path: str, dpi: int = 200) -> List[str]:
-    """Render each page of a PDF as a PNG and return base64-encoded strings."""
-    doc = fitz.open(pdf_path)
-    images: List[str] = []
-    zoom = dpi / 72.0
-    matrix = fitz.Matrix(zoom, zoom)
-    for page_num in range(len(doc)):
-        pix = doc[page_num].get_pixmap(matrix=matrix)
-        png_bytes = pix.tobytes("png")
-        images.append(base64.b64encode(png_bytes).decode("utf-8"))
-    doc.close()
-    logger.info("Converted PDF to %d page image(s) at %d DPI", len(images), dpi)
-    return images
+def parse_document_local(file_path: str) -> dict:
+    """Parse a document with Docling (PARSE stage only).
 
-
-def _build_pdf_extraction_prompt(schema_definition: Dict[str, str]) -> str:
-    """Build a prompt for PDF image-based extraction."""
-    field_descriptions = "\n".join(
-        f'  - "{key}": {description}' for key, description in schema_definition.items()
-    )
-    return f"""You are a precise document data extractor. The image(s) above are pages of a PDF document.
-Extract the requested fields from the document.
-
-Return ONLY a valid JSON object with the following fields:
-{field_descriptions}
-
-Rules:
-- Return raw JSON only — no markdown fences, no explanation, no extra text.
-- If a field is not found in the document, use an empty string "".
-- For numeric fields, return the value as a string.
-
-JSON:"""
+    Args:
+        file_path: Path to document (PDF, DOCX, PPTX, image).
+    Returns:
+        dict with markdown, tables, metadata, chunks.
+    """
+    logger.info("parse_document_local: %s", file_path)
+    try:
+        if not os.path.isfile(file_path):
+            return {"status": "error", "error_message": "Not found: " + file_path}
+        p = _parse_document_with_docling(file_path)
+        return {"status": "success", "markdown": p["markdown"], "tables": p["tables"],
+                "metadata": p["metadata"], "chunks": p["chunks"]}
+    except ImportError as e:
+        return {"status": "error", "error_message": str(e)}
+    except Exception as e:
+        logger.error("Failed: %s\n%s", e, traceback.format_exc())
+        return {"status": "error", "error_message": str(e)}
 
 
 def extract_from_pdf_local(pdf_file_path: str, schema_json_str: str) -> dict:
-    """Extracts structured data from a PDF file using a local Ollama model (Gemma4).
-
-    The PDF pages are rendered as images and sent to the multimodal Gemma4 model
-    running on Ollama for vision-based extraction.
+    """Extract from PDF: Docling (Parse) + Qwen3.5 (Extract).
 
     Args:
-        pdf_file_path: The absolute or relative file-system path to the PDF file.
-        schema_json_str: A JSON string containing key-value pairs where the key
-            is the desired field name and the value is the description of the field.
-
+        pdf_file_path: Path to PDF file.
+        schema_json_str: JSON string of {field_name: description} pairs.
     Returns:
-        dict: The extracted data matching the requested schema, or an error status.
+        dict with status, data, parse_metadata.
     """
-    logger.info(
-        "extract_from_pdf_local called — pdf_file_path=%s, schema length=%d",
-        pdf_file_path,
-        len(schema_json_str),
-    )
-
+    logger.info("extract_from_pdf_local: %s", pdf_file_path)
     try:
-        # --- validate the file -------------------------------------------------------
         if not os.path.isfile(pdf_file_path):
-            return {"status": "error", "error_message": f"File not found: {pdf_file_path}"}
-
-        # --- parse schema ------------------------------------------------------------
-        schema_definition = json.loads(schema_json_str)
-        if not isinstance(schema_definition, dict):
-            logger.error("Schema is not a dict: %s", type(schema_definition))
-            return {"status": "error", "error_message": "Schema definition must be a JSON object (dictionary)."}
-
-        # --- convert PDF pages to base64 images --------------------------------------
-        page_images = _pdf_to_base64_images(pdf_file_path)
-        if not page_images:
-            return {"status": "error", "error_message": "PDF has no pages or could not be rendered."}
-
-        # --- build prompt and JSON schema for structured output ----------------------
-        prompt = _build_pdf_extraction_prompt(schema_definition)
-        json_schema = _build_json_schema(schema_definition)
-
-        ollama_url = os.environ.get("LM_BASE_URL", "http://localhost:1234/v1")
-        ollama_model = os.environ.get("LM_MODEL", "lm_studio/gemma-4-e2b")
-        api_url = f"{ollama_url.rstrip('/')}/api/chat"
-
-        logger.info("Calling Ollama model=%s at %s with %d page image(s)", ollama_model, api_url, len(page_images))
-
-        # Ollama's /api/chat supports an "images" field for multimodal models.
-        # Each image is a base64-encoded string (no data-URI prefix).
-        payload = {
-            "model": ollama_model,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt,
-                    "images": page_images,
-                },
-            ],
-            "format": json_schema,
-            "stream": False,
-            "options": {
-                "temperature": 0.0,
-            },
-        }
-
-        with httpx.Client(timeout=_REQUEST_TIMEOUT) as http_client:
-            response = http_client.post(api_url, json=payload)
-            response.raise_for_status()
-
-        response_json = response.json()
-        raw_text = response_json.get("message", {}).get("content", "")
-        logger.debug("Raw Ollama response text: %s", raw_text)
-
-        if not raw_text:
-            logger.warning("Ollama returned an empty response")
-            return {"status": "error", "error_message": "Model returned an empty response."}
-
-        parsed_data = json.loads(raw_text)
-        logger.info("PDF extraction succeeded — %d fields returned", len(parsed_data))
-        logger.debug("Extracted data: %s", json.dumps(parsed_data, indent=2))
-        return {"status": "success", "data": parsed_data}
-
+            return {"status": "error", "error_message": "Not found: " + pdf_file_path}
+        sd = json.loads(schema_json_str)
+        if not isinstance(sd, dict):
+            return {"status": "error", "error_message": "Schema must be a JSON object."}
+        # STAGE 1: PARSE
+        parsed = _parse_document_with_docling(pdf_file_path)
+        md = parsed["markdown"]
+        if not md or not md.strip():
+            return {"status": "error", "error_message": "Docling extracted no content."}
+        if len(md) > 15000:
+            md = md[:15000] + "\n\n[... truncated ...]"
+        # STAGE 2: EXTRACT
+        data = _call_qwen_extraction(md, sd)
+        return {"status": "success", "data": data, "parse_metadata": parsed.get("metadata", {})}
+    except ImportError as e:
+        return {"status": "error", "error_message": str(e)}
     except httpx.ConnectError:
-        msg = f"Cannot connect to Ollama at {_OLLAMA_BASE_URL}. Is Ollama running?"
-        logger.error(msg)
-        return {"status": "error", "error_message": msg}
+        return {"status": "error", "error_message": "Cannot connect to Ollama at " + _OLLAMA_BASE_URL}
     except httpx.HTTPStatusError as e:
-        msg = f"Ollama HTTP error {e.response.status_code}: {e.response.text[:300]}"
-        logger.error(msg)
-        return {"status": "error", "error_message": msg}
+        return {"status": "error", "error_message": "Ollama HTTP " + str(e.response.status_code)}
     except json.JSONDecodeError as e:
-        logger.error("Invalid JSON in response or schema: %s", e)
-        return {"status": "error", "error_message": f"Invalid JSON: {e}"}
+        return {"status": "error", "error_message": "Invalid JSON: " + str(e)}
     except Exception as e:
-        tb = traceback.format_exc()
-        logger.error("extract_from_pdf_local failed: %s\n%s", e, tb)
-        return {"status": "error", "error_message": f"{type(e).__name__}: {e}"}
+        logger.error("Failed: %s\n%s", e, traceback.format_exc())
+        return {"status": "error", "error_message": str(e)}
+
+
+def extract_from_base64_pdf_local(pdf_data_base64: str, schema_json_str: str) -> dict:
+    """Extract from base64 PDF: Docling (Parse) + Qwen3.5 (Extract).
+
+    Args:
+        pdf_data_base64: Base64-encoded PDF.
+        schema_json_str: JSON string of {field_name: description} pairs.
+    Returns:
+        dict with status, data, parse_metadata.
+    """
+    logger.info("extract_from_base64_pdf_local called")
+    try:
+        sd = json.loads(schema_json_str)
+        if not isinstance(sd, dict):
+            return {"status": "error", "error_message": "Schema must be a JSON object."}
+        parsed = _parse_base64_pdf_with_docling(pdf_data_base64)
+        md = parsed["markdown"]
+        if not md or not md.strip():
+            return {"status": "error", "error_message": "Docling extracted no content."}
+        if len(md) > 15000:
+            md = md[:15000] + "\n\n[... truncated ...]"
+        data = _call_qwen_extraction(md, sd)
+        return {"status": "success", "data": data, "parse_metadata": parsed.get("metadata", {})}
+    except (ValueError, ImportError) as e:
+        return {"status": "error", "error_message": str(e)}
+    except httpx.ConnectError:
+        return {"status": "error", "error_message": "Cannot connect to Ollama."}
+    except Exception as e:
+        logger.error("Failed: %s\n%s", e, traceback.format_exc())
+        return {"status": "error", "error_message": str(e)}

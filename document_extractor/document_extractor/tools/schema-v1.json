@@ -1,0 +1,325 @@
+{
+  "description": "Root object",
+  "type": "object",
+  "properties": {
+    "contact_information": {
+      "description": "Contains all contact details for the individual.",
+      "x-alternativeNames": [
+        "Contact Information",
+        "Contact Details",
+        "Personal Information"
+      ],
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The full name of the individual.",
+          "x-alternativeNames": [
+            "Name",
+            "Full Name",
+            "Applicant Name"
+          ],
+          "type": "string"
+        },
+        "role": {
+          "description": "The primary professional role or title of the individual.",
+          "x-alternativeNames": [
+            "Role",
+            "Position",
+            "Job Title"
+          ],
+          "type": "string"
+        },
+        "email": {
+          "description": "The email address for contacting the individual.",
+          "format": "email",
+          "x-alternativeNames": [
+            "Email",
+            "Email Address",
+            "Contact Email"
+          ],
+          "type": "string"
+        },
+        "phone": {
+          "description": "The telephone number for contacting the individual.",
+          "format": "phone",
+          "x-alternativeNames": [
+            "Phone",
+            "Phone Number",
+            "Contact Number"
+          ],
+          "type": "string"
+        },
+        "location": {
+          "description": "The geographical location of the individual, typically city and state or country.",
+          "x-alternativeNames": [
+            "Location",
+            "City and State",
+            "Residence"
+          ],
+          "type": "string"
+        },
+        "linkedin_profile_url": {
+          "description": "The URL to the individual's LinkedIn professional profile.",
+          "format": "url",
+          "x-alternativeNames": [
+            "LinkedIn Profile",
+            "LinkedIn URL",
+            "Professional Network"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "role",
+        "email",
+        "phone",
+        "location",
+        "linkedin_profile_url"
+      ]
+    },
+    "profile_summary_points": {
+      "description": "A list of key points summarizing the individual's professional profile and experience.",
+      "x-alternativeNames": [
+        "Profile Summary",
+        "Summary Points",
+        "Professional Overview"
+      ],
+      "type": "array",
+      "items": {
+        "description": "Item in profile_summary_points",
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    "professional_experience": {
+      "description": "A list of professional roles and companies where the individual has worked.",
+      "x-alternativeNames": [
+        "Professional Experience",
+        "Work History",
+        "Employment Details"
+      ],
+      "type": "array",
+      "items": {
+        "description": "Item in professional_experience",
+        "type": "object",
+        "properties": {
+          "responsibilities": {
+            "description": "A list of duties, tasks, or achievements associated with a specific professional role.",
+            "x-alternativeNames": [
+              "Responsibilities",
+              "Duties",
+              "Key Tasks"
+            ],
+            "type": "array",
+            "items": {
+              "description": "Item in responsibilities",
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          },
+          "job_title": {
+            "description": "The specific title of the position held by the individual at a company.",
+            "x-alternativeNames": [
+              "Job Title",
+              "Position Held",
+              "Role"
+            ],
+            "type": "string"
+          },
+          "company_name": {
+            "description": "The name of the company or organization where the individual was employed.",
+            "x-alternativeNames": [
+              "Company Name",
+              "Employer",
+              "Organization"
+            ],
+            "type": "string"
+          },
+          "start_date": {
+            "description": "The date when the individual began their employment or role at the company.",
+            "format": "YYYY-MM-DD",
+            "x-alternativeNames": [
+              "Start Date",
+              "Employment Start",
+              "Beginning Date"
+            ],
+            "type": "string"
+          },
+          "end_date": {
+            "description": "The date when the individual concluded their employment or role at the company.",
+            "format": "YYYY-MM-DD",
+            "x-alternativeNames": [
+              "End Date",
+              "Employment End",
+              "Termination Date"
+            ],
+            "type": "string"
+          },
+          "job_location": {
+            "description": "The geographical location where the job was performed or the company is based.",
+            "x-alternativeNames": [
+              "Job Location",
+              "Work Location",
+              "Company Location"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "responsibilities",
+          "job_title",
+          "company_name",
+          "start_date",
+          "end_date",
+          "job_location"
+        ]
+      }
+    },
+    "education": {
+      "description": "Details about the individual's academic qualifications and institutions attended.",
+      "x-alternativeNames": [
+        "Education",
+        "Academic Background",
+        "Learning History"
+      ],
+      "type": "array",
+      "items": {
+        "description": "Item in education",
+        "type": "object",
+        "properties": {
+          "degree": {
+            "description": "The academic degree or qualification obtained by the individual.",
+            "x-alternativeNames": [
+              "Degree",
+              "Qualification",
+              "Academic Award"
+            ],
+            "type": "string"
+          },
+          "institution": {
+            "description": "The name of the educational institution where the degree was earned.",
+            "x-alternativeNames": [
+              "Institution",
+              "University",
+              "College"
+            ],
+            "type": "string"
+          },
+          "location": {
+            "description": "The geographical location of the educational institution.",
+            "x-alternativeNames": [
+              "Location",
+              "Campus Location",
+              "City and State"
+            ],
+            "type": "string"
+          },
+          "start_year": {
+            "description": "The year when the individual began their studies at the institution.",
+            "format": "YYYY",
+            "x-alternativeNames": [
+              "Start Year",
+              "Enrollment Year",
+              "Year Started"
+            ],
+            "type": "string"
+          },
+          "end_year": {
+            "description": "The year when the individual completed their studies or graduated from the institution.",
+            "format": "YYYY",
+            "x-alternativeNames": [
+              "End Year",
+              "Graduation Year",
+              "Year Completed"
+            ],
+            "type": "string"
+          },
+          "gpa": {
+            "description": "The Grade Point Average achieved by the individual during their studies.",
+            "x-alternativeNames": [
+              "GPA",
+              "Grade Point Average",
+              "Academic Score"
+            ],
+            "type": "string"
+          },
+          "percentage": {
+            "description": "The overall percentage or academic score obtained by the individual.",
+            "x-alternativeNames": [
+              "Percentage",
+              "Academic Percentage",
+              "Overall Score"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "degree",
+          "institution",
+          "location",
+          "start_year",
+          "end_year",
+          "gpa",
+          "percentage"
+        ]
+      }
+    },
+    "technical_skills": {
+      "description": "A collection of technical skills possessed by the individual.",
+      "x-alternativeNames": [
+        "Technical Skills",
+        "Core Competencies",
+        "Skill Set"
+      ],
+      "type": "array",
+      "items": {
+        "description": "Item in technical_skills",
+        "type": "object",
+        "properties": {
+          "skill_name": {
+            "description": "The specific name of the technical skill or competency.",
+            "x-alternativeNames": [
+              "Skill Name",
+              "Competency",
+              "Technology"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "description": "A brief description or context of how the skill was utilized or the proficiency level.",
+            "x-alternativeNames": [
+              "Description",
+              "Proficiency",
+              "Skill Details"
+            ],
+            "type": "string"
+          },
+          "skill_category": {
+            "description": "Broad classification or grouping for the technical skill.",
+            "x-alternativeNames": [
+              "Skill Category",
+              "Area of Expertise",
+              "Technical Domain"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill_name",
+          "description",
+          "skill_category"
+        ]
+      }
+    }
+  },
+  "required": [
+    "contact_information",
+    "profile_summary_points",
+    "professional_experience",
+    "education",
+    "technical_skills"
+  ]
+}

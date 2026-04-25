@@ -2,8 +2,7 @@ import json
 import logging
 import os
 import traceback
-from typing import Dict, Optional, Any, Type, List
-from enum import Enum
+from typing import Dict, Optional
 from pydantic import BaseModel, create_model, Field
 from google.genai import types
 from google.genai import Client
@@ -24,93 +23,38 @@ def _get_client() -> Client:
     return _client
 
 
-def parse_schema_type(field_def: Dict[str, Any], field_name: str) -> Type[Any]:
-    field_type = field_def.get("type", "string")
-    if field_type == "string":
-        enum_values = field_def.get("enum")
-        if enum_values and isinstance(enum_values, list):
-            enum_name = f"{field_name.title().replace('_', '')}Enum"
-            # Enums must have valid Python identifier keys.
-            enum_members = {f"VAL_{i}": str(v) for i, v in enumerate(enum_values)}
-            return Enum(enum_name, enum_members)
-        return str
-    elif field_type == "number":
-        return float
-    elif field_type == "integer":
-        return int
-    elif field_type == "boolean":
-        return bool
-    elif field_type == "array":
-        items_def = field_def.get("items")
-        if items_def and isinstance(items_def, dict):
-            item_type = parse_schema_type(items_def, f"{field_name}_item")
-            return List[item_type]
-        else:
-            return List[str]
-    elif field_type == "object":
-        properties = field_def.get("properties", {})
-        return build_model_from_properties(field_name.title().replace('_', ''), properties)
-    else:
-        return str
-
-
-def build_model_from_properties(model_name: str, properties: Dict[str, Any]) -> Type[BaseModel]:
+def build_dynamic_schema(schema_definition: Dict[str, str]) -> type[BaseModel]:
+    """
+    Builds a dynamic Pydantic model from a dictionary of keys and descriptions.
+    """
+    logger.debug("Building dynamic schema with %d fields: %s", len(schema_definition), list(schema_definition.keys()))
     fields = {}
-    for key, field_def in properties.items():
-        if not isinstance(field_def, dict):
-            continue
-            
-        field_type_class = parse_schema_type(field_def, key)
-        
-        description = field_def.get("description", "")
-        if "format" in field_def:
-            description += f" (Format: {field_def['format']})"
-        if "x-alternativeNames" in field_def:
-            alt_names = ", ".join(field_def["x-alternativeNames"])
-            if description:
-                description += f" (Alternative names: {alt_names})"
-            else:
-                description = f"Alternative names: {alt_names}"
-            
-        fields[key] = (Optional[field_type_class], Field(default=None, description=description.strip() or None))
-        
-    return create_model(model_name, **fields)
-
-
-def build_dynamic_schema(schema_definition: Dict[str, Any]) -> type[BaseModel]:
-    """
-    Builds a dynamic Pydantic model from a JSON schema definition.
-    """
-    logger.debug("Building dynamic schema")
+    for key, description in schema_definition.items():
+        # For simplicity, treating all fields as string fields.
+        # Advanced versions could parse the description to infer types.
+        fields[key] = (str, Field(description=description))
     
-    if schema_definition.get("type") != "object":
-        raise ValueError("The top-level 'type' keyword must be 'object'.")
-        
-    properties = schema_definition.get("properties", {})
-    DynamicModel = build_model_from_properties("DynamicDocumentModel", properties)
-    
-    logger.debug("Dynamic Pydantic model created")
+    DynamicModel = create_model("DynamicDocumentModel", **fields)
+    logger.debug("Dynamic Pydantic model created: %s", DynamicModel.model_json_schema())
     return DynamicModel
 
 
-def _load_default_schema() -> Dict[str, Any]:
-    schema_path = os.path.join(os.path.dirname(__file__), "schema-v1.json")
-    with open(schema_path, "r") as f:
-        return json.load(f)
+def extract_document_data(document_text: str, schema_json_str: str) -> dict:
+    """Extracts structured data from a document based on a provided JSON schema definition.
 
-def extract_document_data(document_text: str, schema_json_str: Optional[str] = None) -> dict:
-    """Extracts structured data from a document based on an optional JSON schema definition.
-    If no schema_json_str is provided, it falls back to tools/schema-v1.json.
+    Args:
+        document_text: The text content of the document to extract data from.
+        schema_json_str: A JSON string containing key-value pairs where the key is the desired field name and the value is the description of the field.
+
+    Returns:
+        dict: The extracted data matching the requested schema, or an error status.
     """
-    schema_len = len(schema_json_str) if schema_json_str else 0
-    logger.info("extract_document_data called — document length=%d, schema length=%d", len(document_text), schema_len)
+    logger.info("extract_document_data called — document length=%d, schema length=%d", len(document_text), len(schema_json_str))
+    logger.debug("schema_json_str: %s", schema_json_str)
     logger.debug("document_text (first 500 chars): %s", document_text[:500])
 
     try:
-        if schema_json_str:
-            schema_definition = json.loads(schema_json_str)
-        else:
-            schema_definition = _load_default_schema()
+        schema_definition = json.loads(schema_json_str)
         if not isinstance(schema_definition, dict):
             logger.error("Schema is not a dict: %s", type(schema_definition))
             return {"status": "error", "error_message": "Schema definition must be a JSON object (dictionary)."}
@@ -154,12 +98,20 @@ def extract_document_data(document_text: str, schema_json_str: Optional[str] = N
         return {"status": "error", "error_message": f"{type(e).__name__}: {e}"}
 
 
-def extract_from_pdf(pdf_file_path: str, schema_json_str: Optional[str] = None) -> dict:
+def extract_from_pdf(pdf_file_path: str, schema_json_str: str) -> dict:
     """Extracts structured data from a PDF file by sending it directly to the Gemini model.
-    If no schema_json_str is provided, it falls back to tools/schema-v1.json.
+
+    The PDF binary is sent natively to the model for multimodal understanding —
+    no intermediate text extraction is performed.
+
+    Args:
+        pdf_file_path: The absolute or relative file-system path to the PDF file.
+        schema_json_str: A JSON string containing key-value pairs where the key is the desired field name and the value is the description of the field.
+
+    Returns:
+        dict: The extracted data matching the requested schema, or an error status.
     """
-    schema_len = len(schema_json_str) if schema_json_str else 0
-    logger.info("extract_from_pdf called — pdf_file_path=%s, schema length=%d", pdf_file_path, schema_len)
+    logger.info("extract_from_pdf called — pdf_file_path=%s, schema length=%d", pdf_file_path, len(schema_json_str))
 
     try:
         # --- validate & read the PDF ------------------------------------------------
@@ -172,10 +124,7 @@ def extract_from_pdf(pdf_file_path: str, schema_json_str: Optional[str] = None) 
         logger.info("Read PDF file: %d bytes", len(pdf_bytes))
 
         # --- build the dynamic response schema -------------------------------------
-        if schema_json_str:
-            schema_definition = json.loads(schema_json_str)
-        else:
-            schema_definition = _load_default_schema()
+        schema_definition = json.loads(schema_json_str)
         if not isinstance(schema_definition, dict):
             logger.error("Schema is not a dict: %s", type(schema_definition))
             return {"status": "error", "error_message": "Schema definition must be a JSON object (dictionary)."}
